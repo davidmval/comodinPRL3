@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrevenNoticias TV</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --tv-body: #2a2118;
+    --tv-bezel: #1a1510;
+    --tv-screen-bg: #000;
+    --tv-knob: #3d3020;
+    --tv-knob-shine: #5a4830;
+    --accent: #ff2d2d;
+    --ticker-bg: #cc0000;
+    --amber: #ffb300;
+    --green-led: #00ff88;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Oswald', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── TV CABINET ── */
+  .tv-cabinet {
+    background: linear-gradient(160deg, #3a2e1e 0%, #1e160a 50%, #2a1e0e 100%);
+    border-radius: 18px 18px 22px 22px;
+    padding: 14px 14px 18px;
+    box-shadow:
+      0 0 0 2px #0a0804,
+      0 8px 40px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -2px 4px rgba(0,0,0,0.5);
+    width: 420px;
+    position: relative;
+  }
+
+  /* Fake wood grain texture overlay */
+  .tv-cabinet::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 18px 18px 22px 22px;
+    background: repeating-linear-gradient(
+      88deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.04) 3px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* ── BRAND BADGE ── */
+  .tv-brand {
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #8a7050;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* ── SCREEN BEZEL ── */
+  .screen-bezel {
+    background: #0d0d0d;
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow:
+      inset 0 2px 8px rgba(0,0,0,0.9),
+      inset 0 0 0 1px #333,
+      0 0 20px rgba(255,180,0,0.05);
+    position: relative;
+  }
+
+  /* ── SCREEN ── */
+  .tv-screen {
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 4/3;
+    width: 100%;
+  }
+
+  /* CRT scanlines overlay */
+  .tv-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.25) 2px,
+      rgba(0,0,0,0.25) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+    border-radius: 6px;
+  }
+
+  /* CRT vignette */
+  .tv-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 11;
+    border-radius: 6px;
+  }
+
+  /* ── STATIC / IDLE SCREEN ── */
+  .screen-static {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #050505;
+    z-index: 5;
+  }
+
+  .static-noise {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+    background-size: cover;
+    animation: staticAnim 0.08s steps(1) infinite;
+    opacity: 0.6;
+  }
+
+  @keyframes staticAnim {
+    0%   { background-position: 0 0; }
+    25%  { background-position: -10px 5px; }
+    50%  { background-position: 8px -3px; }
+    75%  { background-position: -5px 10px; }
+    100% { background-position: 3px -8px; }
+  }
+
+  .static-text {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    line-height: 1.8;
+  }
+
+  .channel-display {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--amber);
+    text-shadow: 0 0 20px var(--amber);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* ── VIDEO LAYER ── */
+  .screen-video {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    z-index: 5;
+    background: #000;
+  }
+
+  .screen-video.active { display: flex; }
+
+  /* Breaking news header bar */
+  .news-header {
+    background: var(--accent);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    z-index: 12;
+  }
+
+  .breaking-dot {
+    width: 6px; height: 6px;
+    background: white;
+    border-radius: 50%;
+    animation: blinkDot 1s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes blinkDot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .news-header-channel {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    opacity: 0.9;
+  }
+
+  /* Video element */
+  .main-video {
+    flex: 1;
+    width: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Bottom ticker */
+  .news-ticker {
+    background: var(--ticker-bg);
+    color: white;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 3px 0;
+    overflow: hidden;
+    flex-shrink: 0;
+    white-space: nowrap;
+    z-index: 12;
+  }
+
+  .ticker-inner {
+    display: inline-block;
+    animation: tickerMove 18s linear infinite;
+    padding-left: 100%;
+  }
+
+  @keyframes tickerMove {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-100%); }
+  }
+
+  /* Channel switch flash */
+  .channel-flash {
+    position: absolute;
+    inset: 0;
+    background: white;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 6px;
+  }
+
+  .channel-flash.flash {
+    animation: flashAnim 0.25s ease-out;
+  }
+
+  @keyframes flashAnim {
+    0%   { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  /* ── CONTROLS STRIP ── */
+  .controls-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 0 4px;
+  }
+
+  /* LED indicator */
+  .led {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #1a0000;
+    box-shadow: none;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .led.on {
+    background: var(--green-led);
+    box-shadow: 0 0 6px var(--green-led), 0 0 12px rgba(0,255,136,0.4);
+  }
+
+  /* Volume knob (decorative) */
+  .knob {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, var(--tv-knob-shine), var(--tv-knob));
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .knob::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 50%;
+    transform: translateX(-50%);
+    width: 2px; height: 6px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 1px;
+  }
+
+  /* Channel display on cabinet */
+  .channel-readout {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--amber);
+    text-shadow: 0 0 8px var(--amber);
+    background: #0a0600;
+    border: 1px solid #2a1a00;
+    border-radius: 3px;
+    padding: 2px 6px;
+    letter-spacing: 2px;
+    min-width: 38px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* ── CHANNEL BUTTONS PANEL ── */
+  .channels-panel {
+    margin-top: 10px;
+    background: #150f08;
+    border-radius: 8px;
+    padding: 8px 10px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  .channels-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    color: #5a4830;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  .channels-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+  }
+
+  .ch-btn {
+    background: linear-gradient(160deg, #3a2e1e, #1a1208);
+    color: #c8a060;
+    border: 1px solid #2a1e0e;
+    border-radius: 4px;
+    padding: 5px 2px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'Share Tech Mono', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  .ch-btn:hover {
+    background: linear-gradient(160deg, #4a3e2e, #2a1e0e);
+    color: var(--amber);
+    border-color: #4a3020;
+    box-shadow: 0 0 6px rgba(255,179,0,0.3), 0 2px 3px rgba(0,0,0,0.5);
+    transform: translateY(-1px);
+  }
+
+  .ch-btn:active { transform: translateY(1px); }
+
+  .ch-btn.active {
+    background: linear-gradient(160deg, var(--accent), #8a0000);
+    color: white;
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(255,45,45,0.5), 0 2px 3px rgba(0,0,0,0.5);
+  }
+
+  .ch-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── NO SIGNAL for channels without video ── */
+  .no-signal {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: #030303;
+    z-index: 6;
+    gap: 4px;
+  }
+
+  .no-signal.show { display: flex; }
+
+  .no-signal-bars {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    height: 30px;
+    margin-bottom: 6px;
+  }
+
+  .ns-bar {
+    width: 8px;
+    background: #333;
+    border-radius: 1px;
+  }
+
+  .ns-bar:nth-child(1) { height: 35%; }
+  .ns-bar:nth-child(2) { height: 55%; }
+  .ns-bar:nth-child(3) { height: 80%; }
+  .ns-bar:nth-child(4) { height: 100%; }
+  .ns-bar:nth-child(5) { height: 65%; }
+
+  .no-signal-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: #444;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ── FOOTER ── */
+  .tv-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding: 0 2px;
+  }
+
+  .tv-footer-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    color: #3a2a18;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="tv-cabinet">
+
+  <div class="tv-brand">PrevenNoticias · TV</div>
+
+  <div class="screen-bezel">
+    <div class="tv-screen" id="tvScreen">
+
+      <!-- Static idle screen -->
+      <div class="screen-static" id="screenStatic">
+        <div class="static-noise"></div>
+        <div class="static-text">
+          <div style="font-size:9px; opacity:0.6; margin-bottom:6px;">SELECCIONA UN CANAL</div>
+          <div class="channel-display" id="staticChannel">--</div>
+          <div style="font-size:8px; opacity:0.4; margin-top:6px;">PREVENNOTICIAS TV</div>
+        </div>
+      </div>
+
+      <!-- No signal -->
+      <div class="no-signal" id="noSignal">
+        <div class="no-signal-bars">
+          <div class="ns-bar"></div>
+          <div class="ns-bar"></div>
+          <div class="ns-bar"></div>
+          <div class="ns-bar"></div>
+          <div class="ns-bar"></div>
+        </div>
+        <div class="no-signal-text">SIN SEÑAL</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:#333;margin-top:3px;letter-spacing:1px;">CANAL DISPONIBLE PRÓXIMAMENTE</div>
+      </div>
+
+      <!-- Video player -->
+      <div class="screen-video" id="screenVideo">
+        <div class="news-header">
+          <div class="breaking-dot"></div>
+          <span>ÚLTIMA HORA · SEGURIDAD LABORAL</span>
+          <span class="news-header-channel" id="headerChannel">CH 00</span>
+        </div>
+        <video class="main-video" id="mainVideo" controls playsinline>
+          Tu navegador no soporta vídeo HTML5.
+        </video>
+        <div class="news-ticker">
+          <span class="ticker-inner" id="tickerText">
+            PREVENNOTICIAS · SEGURIDAD Y SALUD LABORAL · INFORMACIÓN PARA EMPRESAS Y TRABAJADORES · ARAGÓN · PREVENCIÓN DE RIESGOS LABORALES
+          </span>
+        </div>
+      </div>
+
+      <!-- Flash effect -->
+      <div class="channel-flash" id="channelFlash"></div>
+
+    </div>
+  </div>
+
+  <!-- Controls strip -->
+  <div class="controls-strip">
+    <div class="led" id="powerLed"></div>
+    <div class="knob"></div>
+    <div class="knob"></div>
+    <div style="flex:1"></div>
+    <div class="channel-readout" id="channelReadout">--</div>
+  </div>
+
+  <!-- Channel buttons -->
+  <div class="channels-panel">
+    <div class="channels-label">◀ Selecciona canal / pregunta ▶</div>
+    <div class="channels-grid" id="channelsGrid"></div>
+  </div>
+
+  <div class="tv-footer">
+    <div class="tv-footer-text">COMODÍN 3 · ARCHIVO DE NOTICIAS</div>
+    <div class="tv-footer-text">🦺 PREVENPOINTS</div>
+  </div>
+
+</div>
+
+<script>
+  // ── CONFIGURATION ──
+  // Map question number → video filename (relative path, same folder as HTML)
+  // Add entries here as you create the videos.
+  // Currently only p2.mp4 exists as a test.
+  const mediaMap = {
+    2: 'p2.mp4',
+    // 1: 'p1.mp4',
+    // 3: 'p3.mp4',
+    // 4: 'p4.mp4',
+    // 5: 'p5.mp4',
+    // 6: 'p6.mp4',
+    // 7: 'p7.mp4',
+    // 8: 'p8.mp4',
+    // 9: 'p9.mp4',
+    // 10: 'p10.mp4',
+    // 11: 'p11.mp4',
+    // 12: 'p12.mp4',
+    // 13: 'p13.mp4',
+    // 14: 'p14.mp4',
+    // 15: 'p15.mp4',
+    // 16: 'p16.mp4',
+    // 17: 'p17.mp4',
+    // 18: 'p18.mp4',
+    // 19: 'p19.mp4',
+    // 20: 'p20.mp4',
+  };
+
+  // Ticker texts per channel (optional flavour — add your own)
+  const tickerTexts = {
+    1:  'CANAL 1 · PREVENCIÓN EN EL TRABAJO · SEGURIDAD LABORAL · ARAGÓN',
+    2:  'CANAL 2 · OBLIGACIONES EMPRESARIALES · LEY 31/1995 · RD 39/1997',
+    3:  'CANAL 3 · RIESGOS ERGONÓMICOS · SALUD LABORAL · INSST',
+    4:  'CANAL 4 · EQUIPOS DE PROTECCIÓN INDIVIDUAL · NORMATIVA EPI',
+    5:  'CANAL 5 · RIESGOS PSICOSOCIALES · EVALUACIÓN · PROTOCOLO',
+    6:  'CANAL 6 · SEÑALIZACIÓN DE SEGURIDAD · RD 485/1997',
+    7:  'CANAL 7 · COORDINACIÓN EMPRESARIAL · RD 171/2004',
+    8:  'CANAL 8 · VIGILANCIA DE LA SALUD · RECONOCIMIENTOS MÉDICOS',
+    9:  'CANAL 9 · PRIMEROS AUXILIOS · EMERGENCIAS · EVACUACIÓN',
+    10: 'CANAL 10 · LUGARES DE TRABAJO · RD 486/1997',
+    11: 'CANAL 11 · FORMACIÓN E INFORMACIÓN · DERECHOS DE LOS TRABAJADORES',
+    12: 'CANAL 12 · TRABAJOS EN ALTURA · PREVENCIÓN DE CAÍDAS',
+    13: 'CANAL 13 · RIESGO ELÉCTRICO · BT Y AT',
+    14: 'CANAL 14 · MANIPULACIÓN MANUAL DE CARGAS · ERGONOMÍA',
+    15: 'CANAL 15 · AGENTES QUÍMICOS · FICHAS DE SEGURIDAD · SDS',
+    16: 'CANAL 16 · INCENDIOS Y EXPLOSIONES · PROTECCIÓN CONTRA INCENDIOS',
+    17: 'CANAL 17 · PANTALLAS DE VISUALIZACIÓN · TELETRABAJO',
+    18: 'CANAL 18 · ACCIDENTES DE TRABAJO · INVESTIGACIÓN · NOTIFICACIÓN',
+    19: 'CANAL 19 · ENFERMEDADES PROFESIONALES · VIGILANCIA EPIDEMIOLÓGICA',
+    20: 'CANAL 20 · AUDITORÍAS INTERNAS · PLAN DE PREVENCIÓN',
+  };
+
+  let currentChannel = null;
+
+  // Build channel buttons
+  const grid = document.getElementById('channelsGrid');
+  for (let i = 1; i <= 20; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'ch-btn';
+    btn.textContent = i;
+    btn.id = `ch-${i}`;
+    btn.addEventListener('click', () => tuneChannel(i));
+    grid.appendChild(btn);
+  }
+
+  function flash(callback) {
+    const el = document.getElementById('channelFlash');
+    el.classList.remove('flash');
+    void el.offsetWidth; // reflow
+    el.classList.add('flash');
+    setTimeout(callback, 120);
+  }
+
+  function tuneChannel(num) {
+    if (currentChannel === num) return;
+    currentChannel = num;
+
+    // Update button states
+    document.querySelectorAll('.ch-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`ch-${num}`).classList.add('active');
+
+    // Update readouts
+    document.getElementById('channelReadout').textContent = String(num).padStart(2, '0');
+    document.getElementById('staticChannel').textContent = String(num).padStart(2, '0');
+    document.getElementById('headerChannel').textContent = `CH ${String(num).padStart(2, '0')}`;
+    document.getElementById('powerLed').classList.add('on');
+
+    // Update ticker
+    document.getElementById('tickerText').textContent =
+      (tickerTexts[num] || `CANAL ${num} · PREVENNOTICIAS · SEGURIDAD LABORAL`) +
+      ' · '.repeat(3) +
+      (tickerTexts[num] || `CANAL ${num} · PREVENNOTICIAS · SEGURIDAD LABORAL`);
+
+    flash(() => {
+      const hasMedia = mediaMap[num] !== undefined;
+
+      // Hide all layers
+      document.getElementById('screenStatic').style.display = 'none';
+      document.getElementById('noSignal').classList.remove('show');
+      document.getElementById('screenVideo').classList.remove('active');
+
+      if (hasMedia) {
+        // Load and play video
+        const video = document.getElementById('mainVideo');
+        video.pause();
+        video.src = mediaMap[num];
+        video.load();
+        video.play().catch(() => {}); // autoplay may be blocked, controls are visible
+        document.getElementById('screenVideo').classList.add('active');
+      } else {
+        // No signal
+        document.getElementById('noSignal').classList.add('show');
+      }
+    });
+  }
+</script>
+</body>
+</html>
