@@ -643,8 +643,13 @@
         video.pause();
         video.src = mediaMap[num];
         video.load();
-        video.play().catch(() => {}); // autoplay may be blocked, controls are visible
+        video.play().catch(() => {});
         document.getElementById('screenVideo').classList.add('active');
+
+        // Disable all other buttons — page reload resets them
+        document.querySelectorAll('.ch-btn').forEach(b => {
+          if (b.id !== `ch-${num}`) b.disabled = true;
+        });
       } else {
         // No signal
         document.getElementById('noSignal').classList.add('show');
